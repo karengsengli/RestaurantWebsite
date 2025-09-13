@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bangkok Eats</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; font-family: Arial, sans-serif; }
+
+  body { display:flex; flex-direction:column; min-height:100vh; background:#f9f9f9; color:#333; }
+
+  /* Header */
+  header { background:#fff; padding:1rem; box-shadow:0 2px 5px rgba(0,0,0,0.1); display:flex; justify-content: space-between; align-items:center; position:sticky; top:0; z-index:100; }
+
+  header h1 { color:#ff6347; }
+  .lang-switch { font-size:0.9rem; cursor:pointer; color:#555; }
+
+  /* Main wrapper for sidebar + content */
+  .main-wrapper { display:flex; flex:1; }
+
+  /* Sidebar */
+  .sidebar {
+    width:250px;
+    background:#fff;
+    padding:1rem;
+    box-shadow:2px 0 5px rgba(0,0,0,0.1);
+    overflow:auto;
+  }
+  .sidebar h3 { margin-bottom:0.5rem; color:#ff6347; }
+  .sidebar label { display:block; margin-top:1rem; font-weight:bold; }
+  .sidebar select, .sidebar input[type=range] { width:100%; margin-top:0.5rem; padding:0.3rem; }
+
+  /* Main content */
+  main {
+    flex:1;
+    padding:1rem;
+    max-width:1200px;
+  }
+
+  .search-bar { display:flex; margin-bottom:1rem; }
+  .search-bar input { flex:1; padding:0.5rem; border:1px solid #ccc; border-radius:5px 0 0 5px; }
+  .search-bar button { padding:0.5rem 1rem; border:none; background:#ff6347; color:#fff; border-radius:0 5px 5px 0; cursor:pointer; }
+
+  /* Restaurant grid */
+  .restaurant-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap:1rem; }
+
+  .restaurant-card { background:#fff; border-radius:10px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.1); display:flex; flex-direction:column; transition: transform 0.2s; }
+  .restaurant-card:hover { transform: translateY(-5px); }
+  .restaurant-card img { width:100%; height:180px; object-fit:cover; }
+  .restaurant-info { padding:0.75rem; flex:1; display:flex; flex-direction:column; }
+  .restaurant-info h2 { font-size:1.1rem; margin-bottom:0.25rem; }
+  .restaurant-info p { font-size:0.9rem; color:#555; margin-bottom:0.25rem; }
+  .restaurant-info .price { font-weight:bold; color:#ff6347; }
+  .restaurant-info .rating { margin-top:auto; display:flex; justify-content:space-between; align-items:center; font-size:0.85rem; }
+  .restaurant-info button { margin-top:0.5rem; padding:0.4rem 0.6rem; border:none; background:#ff6347; color:#fff; border-radius:5px; cursor:pointer; font-size:0.85rem; }
+
+  /* Footer */
+  footer { text-align:center; padding:1rem; font-size:0.85rem; color:#777; background:#fff; box-shadow:0 -2px 5px rgba(0,0,0,0.1); }
+
+  @media(max-width:800px){
+    .main-wrapper { flex-direction:column; }
+    .sidebar { width:100%; box-shadow:none; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Bangkok Eats</h1>
+  <div class="lang-switch">TH | EN</div>
+</header>
+
+<div class="main-wrapper">
+  <div class="sidebar">
+    <h3>Filters</h3>
+    <label for="price">Max Price (฿)</label>
+    <input type="range" id="price" min="50" max="1000" value="500">
+
+    <label for="rating">Minimum Rating</label>
+    <select id="rating">
+      <option value="0">All</option>
+      <option value="1">⭐</option>
+      <option value="2">⭐⭐</option>
+      <option value="3">⭐⭐⭐</option>
+      <option value="4">⭐⭐⭐⭐</option>
+      <option value="5">⭐⭐⭐⭐⭐</option>
+    </select>
+
+    <label for="distance">Max Distance (km)</label>
+    <input type="range" id="distance" min="0.5" max="10" value="5" step="0.1">
+
+    <label for="status">Open Now</label>
+    <select id="status">
+      <option value="all">All</option>
+      <option value="open">Open</option>
+      <option value="closed">Closed</option>
+    </select>
+
+    <button onclick="applyFilters()" style="margin-top:1rem;padding:0.5rem;background:#ff6347;color:#fff;border:none;border-radius:5px;cursor:pointer;">Apply Filters</button>
+  </div>
+
+  <main>
+    <div class="search-bar">
+      <input type="text" id="search" placeholder="Search restaurants, cuisines...">
+      <button onclick="applyFilters()">Search</button>
+    </div>
+
+    <div class="restaurant-grid" id="restaurantGrid">
+      <!-- Restaurants will be injected here -->
+    </div>
+  </main>
+</div>
+
+<footer>
+  &copy; 2025 Bangkok Eats. Mobile-first restaurant discovery.
+</footer>
+
+<script>
+
+const restaurantImages = [
+  "https://images.unsplash.com/photo-1555992336-03a23c6b15f2",
+  "https://images.unsplash.com/photo-1504674900247-0877df9cc836",
+  "https://images.unsplash.com/photo-1498654896293-37aacf113fd9",
+  "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe"
+];
+  // Generate random unique Unsplash image URLs
+  function randomImage() {
+    return restaurantImages[Math.floor(Math.random() * restaurantImages.length)];
+  }
+
+  const restaurants = [
+    {name:"Som Tum Thai", price:300, rating:4, distance:1.2, status:"open", image:randomImage("thai-food")},
+    {name:"Bangkok Bites", price:450, rating:3, distance:2.5, status:"closed", image:randomImage("restaurant")},
+    {name:"Street Spice", price:200, rating:5, distance:0.8, status:"open", image:randomImage("street-food")},
+    {name:"Curry Corner", price:350, rating:4, distance:3.0, status:"open", image:randomImage("curry")},
+    {name:"Noodle House", price:150, rating:3, distance:0.5, status:"closed", image:randomImage("noodles")},
+    {name:"Sushi Bangkok", price:500, rating:5, distance:4.2, status:"open", image:randomImage("sushi")},
+    {name:"BBQ & Grill", price:400, rating:4, distance:2.0, status:"open", image:randomImage("bbq")}
+  ];
+
+  function displayRestaurants(data){
+    const grid = document.getElementById("restaurantGrid");
+    grid.innerHTML = "";
+    data.forEach(r => {
+      const card = document.createElement("div");
+      card.className = "restaurant-card";
+      card.innerHTML = `
+        <img src="${r.image}" alt="${r.name}">
+        <div class="restaurant-info">
+          <h2>${r.name}</h2>
+          <p class="price">฿${r.price}</p>
+          <p>Distance: ${r.distance} km | ${r.status.charAt(0).toUpperCase() + r.status.slice(1)}</p>
+          <div class="rating">
+            <span>${'⭐'.repeat(r.rating) + '☆'.repeat(5-r.rating)}</span>
+            <button>Save</button>
+          </div>
+        </div>
+      `;
+      grid.appendChild(card);
+    });
+  }
+
+  function applyFilters(){
+    const maxPrice = document.getElementById("price").value;
+    const minRating = document.getElementById("rating").value;
+    const maxDistance = document.getElementById("distance").value;
+    const statusFilter = document.getElementById("status").value;
+    const searchQuery = document.getElementById("search").value.toLowerCase();
+
+    const filtered = restaurants.filter(r => 
+      r.price <= maxPrice &&
+      r.rating >= minRating &&
+      r.distance <= maxDistance &&
+      (statusFilter === "all" || r.status === statusFilter) &&
+      r.name.toLowerCase().includes(searchQuery)
+    );
+
+    displayRestaurants(filtered);
+  }
+
+  // Initial load
+  displayRestaurants(restaurants);
+</script>
+
+</body>
+</html>
